@@ -1,0 +1,64 @@
+========================================
+SIPARAS — Daftar Akun Test Tersedia
+========================================
+
+--- SUPERADMIN ---
+Username : superadmin
+Password : Admin@YGPKB2026!
+Role     : superadmin
+
+--- KEPALA SEKOLAH (13 akun, masing-masing terkunci ke 1 unit) ---
+Username : kepsek_tk1       | Password: password | Unit: TK 1
+Username : kepsek_sd1       | Password: password | Unit: SD 1
+Username : kepsek_smp1      | Password: password | Unit: SMP 1
+Username : kepsek_smk1      | Password: password | Unit: SMK 1
+Username : kepsek_sma_regu  | Password: password | Unit: SMA Regu
+Username : kepsek_tk2       | Password: password | Unit: TK 2
+Username : kepsek_sd2       | Password: password | Unit: SD 2
+Username : kepsek_smp2      | Password: password | Unit: SMP 2
+Username : kepsek_smk2      | Password: password | Unit: SMK 2
+Username : kepsek_sd_ibc    | Password: password | Unit: SD IBC
+Username : kepsek_smp_ibc   | Password: password | Unit: SMP IBC
+Username : kepsek_sma_ibc   | Password: password | Unit: SMA IBC
+Username : kepsek_itbss     | Password: password | Unit: ITBSS
+
+CATATAN: Setiap kepsek HANYA bisa buat tiket untuk unitnya sendiri.
+         Unit asal di form Mutasi juga terkunci otomatis (ikon 🔒).
+
+--- ASP WILAYAH (5 wilayah) ---
+Username : asp_kota         | Password: password | Wilayah: Kota     (TK 1, SD 1)
+Username : asp_regu         | Password: password | Wilayah: Regu     (SMP 1, SMK 1, SMA Regu)
+Username : asp_kubu_raya    | Password: password | Wilayah: Kubu Raya(TK 2, SD 2, SMP 2, SMK 2)
+Username : asp_ibc          | Password: password | Wilayah: IBC      (SD IBC, SMP IBC, SMA IBC)
+Username : asp_itbss        | Password: password | Wilayah: ITBSS    (ITBSS)
+
+--- KD SARPRAS ---
+Username : kd_sarpras       | Password: password | Role: kd_sarpras
+
+--- ADMIN SARPRAS ---
+Username : admin             | Password: password | Role: admin_sarpras
+
+--- KOORDINATOR ---
+Username : koor_utama       | Password: password | Role: koordinator_utama
+Username : koor_ski         | Password: password | Role: koordinator_ski
+
+--- DEPT KANTOR PUSAT ---
+Username : dept_ga           | Password: password | Role: dept_ygpkb (YGPKB)
+
+========================================
+14 UNIT OPERASIONAL (urutan dropdown):
+  1.  TK 1        → ASP Kota
+  2.  SD 1        → ASP Kota
+  3.  SMP 1       → ASP Regu
+  4.  SMK 1       → ASP Regu
+  5.  SMA Regu    → ASP Regu
+  6.  TK 2        → ASP Kubu Raya
+  7.  SD 2        → ASP Kubu Raya
+  8.  SMP 2       → ASP Kubu Raya
+  9.  SMK 2       → ASP Kubu Raya
+  10. SD IBC      → ASP IBC
+  11. SMP IBC     → ASP IBC
+  12. SMA IBC     → ASP IBC
+  13. YGPKB       → Kantor Pusat (tanpa ASP)
+  14. ITBSS       → ASP ITBSS
+========================================

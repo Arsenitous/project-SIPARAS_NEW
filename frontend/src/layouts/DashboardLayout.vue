@@ -4,8 +4,10 @@
     <AppSidebar
       :pending-count="pendingCount"
       :is-dark="isDark"
+      :is-mobile-open="isMobileOpen"
       @toggle-dark="toggleDark"
       @toggle-collapse="sidebarCollapsed = $event"
+      @close="isMobileOpen = false"
     />
 
     <!-- Main Content Wrapper -->
@@ -13,6 +15,14 @@
       <!-- Top Bar -->
       <header class="topbar">
         <div class="topbar-left">
+          <!-- Hamburger Menu (Mobile Only) -->
+          <button class="topbar-hamburger" @click="isMobileOpen = !isMobileOpen" aria-label="Buka Menu" id="hamburger-menu-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
           <h1 class="topbar-title">{{ pageTitle }}</h1>
         </div>
         <div class="topbar-right">
@@ -99,8 +109,11 @@ const toggleDark = () => {
   localStorage.setItem('siparas-dark', isDark.value);
 };
 
-// Sidebar state (sync with AppSidebar via storage)
+// Sidebar state
 const sidebarCollapsed = ref(false);
+
+// Mobile sidebar drawer state
+const isMobileOpen = ref(false);
 
 // Pending count (badge)
 const pendingCount = ref(0);
@@ -188,6 +201,30 @@ onMounted(() => {
   font-weight: 700;
   color: var(--text-primary);
 }
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Hamburger — hidden on desktop, shown on mobile via media query */
+.topbar-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--bg-page);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.topbar-hamburger:hover { background: var(--color-info-bg); color: var(--color-info); border-color: var(--color-info-border); }
+.topbar-hamburger svg { width: 18px; height: 18px; }
+
 .topbar-right {
   display: flex;
   align-items: center;
@@ -294,6 +331,30 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 .footer-sep { opacity: 0.4; }
+
+/* ── MAIN WRAPPER (MOBILE) ── */
+@media (max-width: 768px) {
+  .main-wrapper {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+  .topbar {
+    padding: 0 1rem;
+  }
+  .topbar-hamburger {
+    display: flex;
+  }
+  .topbar-user-name {
+    display: none;
+  }
+  .page-content {
+    padding: 1rem;
+  }
+  .app-footer {
+    padding: 0.75rem 1rem;
+    font-size: 0.7rem;
+  }
+}
 
 /* ── PAGE TRANSITIONS ── */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }

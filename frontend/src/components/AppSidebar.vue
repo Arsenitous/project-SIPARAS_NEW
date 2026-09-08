@@ -1,5 +1,14 @@
 <template>
-  <aside class="sidebar" :class="{ 'sidebar--collapsed': isCollapsed }">
+  <!-- Mobile Overlay Backdrop -->
+  <transition name="overlay-fade">
+    <div
+      v-if="isMobileOpen"
+      class="sidebar-overlay"
+      @click="$emit('close')"
+    />
+  </transition>
+
+  <aside class="sidebar" :class="{ 'sidebar--collapsed': isCollapsed, 'sidebar--mobile-open': isMobileOpen }">
     <!-- Logo Area -->
     <div class="sidebar-logo" :class="{ 'cursor-pointer': isCollapsed }" @click="isCollapsed && toggleCollapse()" :title="isCollapsed ? 'Perluas Sidebar' : ''">
       <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
@@ -159,8 +168,9 @@ import { useToast } from '@/composables/useToast';
 const props = defineProps({
   pendingCount: { type: Number, default: 0 },
   isDark: { type: Boolean, default: false },
+  isMobileOpen: { type: Boolean, default: false },
 });
-const emit = defineEmits(['toggle-dark', 'toggle-collapse']);
+const emit = defineEmits(['toggle-dark', 'toggle-collapse', 'close']);
 
 const route = useRoute();
 const router = useRouter();
@@ -260,7 +270,11 @@ const toggleMasterGroup = () => {
   else router.push('/master-data/units');
 };
 // Auto-open when on master data pages
-watch(() => route.path, (p) => { if (p.startsWith('/master-data')) masterOpen.value = true; }, { immediate: true });
+watch(() => route.path, (p) => {
+  if (p.startsWith('/master-data')) masterOpen.value = true;
+  // Auto-close mobile drawer on navigation
+  emit('close');
+}, { immediate: true });
 
 const handleLogout = async () => {
   try {
@@ -274,6 +288,18 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
+/* ── MOBILE OVERLAY ── */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 99;
+  backdrop-filter: blur(2px);
+}
+.overlay-fade-enter-active { transition: opacity 0.25s ease; }
+.overlay-fade-leave-active { transition: opacity 0.2s ease; }
+.overlay-fade-enter-from, .overlay-fade-leave-to { opacity: 0; }
+
 /* ── SIDEBAR BASE ── */
 .sidebar {
   position: fixed;
@@ -293,6 +319,21 @@ const handleLogout = async () => {
 .sidebar > *:not(.sidebar-collapse-btn) { overflow: hidden; }
 .sidebar--collapsed {
   width: var(--sidebar-collapsed, 68px);
+}
+
+/* ── MOBILE DRAWER MODE ── */
+@media (max-width: 768px) {
+  .sidebar {
+    /* On mobile, sidebar is hidden off-screen by default */
+    width: 280px !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 200;
+  }
+  .sidebar--mobile-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 40px rgba(0, 0, 0, 0.4);
+  }
 }
 
 /* ── LOGO ── */

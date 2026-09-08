@@ -112,4 +112,22 @@ const { confirmState, onConfirm, onCancel } = useConfirm();
   from { opacity: 1; transform: scale(1); }
   to   { opacity: 0; transform: scale(0.9); }
 }
+
+/* ── RESPONSIVE (MOBILE) ── */
+@media (max-width: 480px) {
+  .modal-card {
+    padding: 1.5rem 1.25rem;
+    border-radius: 16px;
+  }
+  /* Tombol aksi ditumpuk vertikal agar lebih mudah ditekan di HP */
+  .modal-actions {
+    flex-direction: column-reverse;
+    gap: 0.625rem;
+  }
+  .modal-actions .btn {
+    width: 100%;
+    padding: 0.875rem;
+    font-size: 0.95rem;
+  }
+}
 </style>

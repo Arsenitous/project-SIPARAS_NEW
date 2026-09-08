@@ -399,9 +399,99 @@ const handleLogin = async () => {
 
 /* ── RESPONSIVE ── */
 @media (max-width: 720px) {
-  .login-container { flex-direction: column; border-radius: 0; min-height: 100vh; }
-  .login-panel--brand { display: none; }
-  .login-panel--form { padding: 2rem 1.5rem; align-items: flex-start; padding-top: 3rem; }
-  .login-mobile-brand { display: flex; }
+  /* Halaman login fullscreen dengan gradient biru seperti panel kiri di desktop */
+  .login-page {
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .login-container {
+    flex-direction: column;
+    border-radius: 0;
+    min-height: 100vh;
+    max-width: 100%;
+    box-shadow: none;
+    margin: 0;
+  }
+
+  /* Sembunyikan panel branding kiri di mobile */
+  .login-panel--brand {
+    display: none;
+  }
+
+  /* Panel form: fullscreen, scroll jika konten panjang */
+  .login-panel--form {
+    flex: 1;
+    min-height: 100vh;
+    padding: 0;
+    background: transparent;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  /* Card form menempel ke semua sisi */
+  .login-form-card {
+    max-width: 100%;
+    width: 100%;
+    min-height: 100vh;
+    background: #fff;
+    border-radius: 28px 28px 0 0;
+    padding: 2rem 1.5rem 2.5rem;
+    margin-top: 120px; /* ruang untuk branding di atas */
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.25);
+    position: relative;
+  }
+
+  /* Tampilkan mini logo/brand di area biru atas */
+  .login-mobile-brand {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 140px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 1;
+    padding-top: 1rem;
+  }
+
+  .login-mobile-logo {
+    width: 52px;
+    height: 52px;
+    filter: brightness(0) invert(1);
+  }
+
+  .login-mobile-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.1em;
+  }
+
+  .login-mobile-sub {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.65);
+    margin-top: -0.25rem;
+  }
+
+  /* Judul form sedikit lebih kecil */
+  .login-form-title { font-size: 1.375rem; }
+
+  /* Tombol login lebih besar & mudah ditekan di HP */
+  .login-btn {
+    padding: 1rem;
+    font-size: 1.05rem;
+    border-radius: 14px;
+  }
+}
+
+/* Layar sangat kecil (< 380px) */
+@media (max-width: 380px) {
+  .login-form-card {
+    padding: 1.5rem 1.25rem 2rem;
+  }
 }
 </style>

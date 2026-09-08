@@ -22,16 +22,6 @@
         @change="handleFileUpload"
       />
 
-      <!-- Input: Ambil dari Kamera (capture) -->
-      <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        class="uploader-hidden-input"
-        ref="cameraInput"
-        @change="handleFileUpload"
-      />
-
       <div v-if="isUploading" class="uploader-state">
         <div class="uploader-spinner"></div>
         <p class="uploader-state-text">Mengompresi gambar...</p>
@@ -57,10 +47,19 @@
             Pilih dari Galeri
             <span style="opacity:0.6;font-size:0.75rem;">({{ files.length }}/{{ maxFiles }})</span>
           </button>
-          <button type="button" class="btn btn-primary btn-sm uploader-camera-btn" @click.stop="triggerCamera">
+          <!-- Label membungkus input kamera langsung — cara paling reliable di semua browser mobile -->
+          <label class="btn btn-primary btn-sm uploader-camera-btn" @click.stop>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style="display:none;"
+              :disabled="files.length >= maxFiles"
+              @change="handleFileUpload"
+            />
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             Ambil Foto
-          </button>
+          </label>
         </div>
       </div>
     </div>
@@ -121,7 +120,6 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue']);
 
 const fileInput   = ref(null);
-const cameraInput = ref(null);
 const files        = ref([]);
 const isUploading  = ref(false);
 const isDragging   = ref(false);
@@ -129,10 +127,6 @@ const errorMessage = ref('');
 
 const triggerFileInput = () => {
   fileInput.value?.click();
-};
-
-const triggerCamera = () => {
-  cameraInput.value?.click();
 };
 
 const formatSize = (bytes) => {
@@ -265,6 +259,15 @@ const removeFile = (index) => {
   margin-top: 0.5rem;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+/* Label yang digunakan sebagai tombol kamera */
+.uploader-camera-btn {
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
 .uploader-btn {

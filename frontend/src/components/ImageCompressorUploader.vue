@@ -12,12 +12,23 @@
       @drop.prevent="handleDrop"
       @click="files.length < maxFiles && triggerFileInput()"
     >
+      <!-- Input: Pilih dari Galeri -->
       <input
         type="file"
         accept="image/jpeg,image/png,image/jpg,image/webp"
         multiple
         class="uploader-hidden-input"
         ref="fileInput"
+        @change="handleFileUpload"
+      />
+
+      <!-- Input: Ambil dari Kamera (capture) -->
+      <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        class="uploader-hidden-input"
+        ref="cameraInput"
         @change="handleFileUpload"
       />
 
@@ -32,18 +43,25 @@
       </div>
 
       <div v-else class="uploader-state">
-        <span class="uploader-icon">📷</span>
+        <span class="uploader-icon">📸</span>
         <p class="uploader-state-title">
-          {{ isDragging ? 'Lepaskan untuk upload' : 'Klik atau seret foto ke sini' }}
+          {{ isDragging ? 'Lepaskan untuk upload' : 'Tambahkan foto temuan' }}
         </p>
         <p class="uploader-state-sub">
           JPG, PNG, WebP · Maks {{ maxFiles }} foto · Auto-kompresi ≤500KB
         </p>
-        <button type="button" class="btn btn-outline btn-sm uploader-btn" @click.stop="triggerFileInput">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Pilih Foto
-          <span style="opacity:0.6;font-size:0.75rem;">({{ files.length }}/{{ maxFiles }})</span>
-        </button>
+        <!-- Dua Tombol: Galeri & Kamera -->
+        <div class="uploader-actions">
+          <button type="button" class="btn btn-outline btn-sm" @click.stop="triggerFileInput">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Pilih dari Galeri
+            <span style="opacity:0.6;font-size:0.75rem;">({{ files.length }}/{{ maxFiles }})</span>
+          </button>
+          <button type="button" class="btn btn-primary btn-sm uploader-camera-btn" @click.stop="triggerCamera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Ambil Foto
+          </button>
+        </div>
       </div>
     </div>
 
@@ -102,14 +120,19 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue']);
 
-const fileInput = ref(null);
-const files = ref([]);
-const isUploading = ref(false);
-const isDragging = ref(false);
+const fileInput   = ref(null);
+const cameraInput = ref(null);
+const files        = ref([]);
+const isUploading  = ref(false);
+const isDragging   = ref(false);
 const errorMessage = ref('');
 
 const triggerFileInput = () => {
   fileInput.value?.click();
+};
+
+const triggerCamera = () => {
+  cameraInput.value?.click();
 };
 
 const formatSize = (bytes) => {
@@ -236,6 +259,14 @@ const removeFile = (index) => {
   margin: 0;
 }
 
+.uploader-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .uploader-btn {
   margin-top: 0.5rem;
   display: inline-flex;
@@ -310,6 +341,28 @@ const removeFile = (index) => {
 }
 
 .preview-img-wrap:hover .preview-remove { opacity: 1; }
+
+/* Di mobile (touch device), tombol hapus selalu terlihat */
+@media (max-width: 768px) {
+  .preview-remove {
+    opacity: 1;
+    width: 26px;
+    height: 26px;
+  }
+
+  /* Tombol kamera lebih menonjol di mobile */
+  .uploader-camera-btn {
+    flex: 1;
+  }
+
+  .uploader-actions {
+    width: 100%;
+  }
+  .uploader-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
 
 .preview-badge {
   position: absolute;

@@ -395,59 +395,65 @@ const handleLogin = async () => {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.login-footer-note { margin-top: 1.5rem; text-align: center; font-size: 0.8rem; color: #94a3b8; }
-
 /* ── RESPONSIVE ── */
 @media (max-width: 720px) {
-  /* Halaman login fullscreen dengan gradient biru */
   .login-page {
     align-items: flex-start;
     overflow-y: auto;
   }
 
+  /* WAJIB: override overflow:hidden dari desktop agar gradient kelihatan */
   .login-container {
     flex-direction: column;
     border-radius: 0;
-    min-height: 100vh;
-    max-width: 100%;
+    overflow: visible;
     box-shadow: none;
     margin: 0;
+    max-width: 100%;
+    min-height: 100vh;
     display: flex;
   }
 
-  /* Sembunyikan panel branding kiri */
   .login-panel--brand { display: none; }
 
-  /* Panel form mengisi penuh layar */
+  /* Panel form: relative → brand bisa di-absolutekan di atas area biru */
   .login-panel--form {
     flex: 1;
-    padding: 0;
+    padding-top: 33vh;     /* ← Dorong card putih ke bawah, beri ruang brand */
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
     background: transparent;
     align-items: stretch;
     justify-content: flex-start;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    position: relative;    /* ← Konteks untuk brand absolut */
   }
 
-  /* ── Area Biru Atas: 1/3 layar ── */
+  /* Brand: absolut di atas area biru, bukan di dalam card putih */
   .login-mobile-brand {
     display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 33vh;
+    min-height: 170px;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    height: 33vh;        /* Tepat 1/3 tinggi layar */
-    min-height: 180px;   /* Minimum agar tidak terlalu kecil */
-    padding: 1rem 1.5rem;
-    flex-shrink: 0;
+    z-index: 2;
+    /* background transparan → gradient biru dari .login-page terlihat */
   }
 
   .login-mobile-logo {
-    width: 52px;
-    height: 52px;
+    width: 50px;
+    height: 50px;
     object-fit: contain;
-    filter: brightness(0) invert(1);
+    filter: brightness(0) invert(1);  /* putih, cocok di atas biru */
   }
 
   .login-mobile-title {
@@ -460,54 +466,41 @@ const handleLogin = async () => {
 
   .login-mobile-sub {
     font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.6);
-    margin-top: 0.125rem;
+    color: rgba(255, 255, 255, 0.65);
   }
 
-  /* ── Card Form: 2/3 layar ── */
+  /* Card putih: mulai di bawah area brand, mengisi sisa 67vh */
   .login-form-card {
     max-width: 100%;
     width: 100%;
-    min-height: 67vh;    /* Tepat 2/3 tinggi layar */
     flex: 1;
     background: #fff;
     border-radius: 24px 24px 0 0;
     padding: 1.75rem 1.5rem 2.5rem;
-    margin-top: 0;
-    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.25);
-    overflow-y: auto;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 3;
   }
 
-  /* Form header lebih compact */
   .login-form-header { margin-bottom: 1.25rem; }
   .login-form-title  { font-size: 1.35rem; }
   .login-form-sub    { font-size: 0.85rem; margin-top: 0.2rem; }
+  .login-form        { gap: 1rem; }
 
-  /* Tombol login mudah ditekan */
   .login-btn {
     padding: 0.9rem;
     font-size: 1rem;
     border-radius: 12px;
-    margin-top: 0.25rem;
   }
-
-  /* Form group spacing lebih rapat di mobile */
-  .login-form { gap: 1rem; }
 
   .login-footer-note { margin-top: 1.25rem; font-size: 0.75rem; }
 }
 
 /* Layar sangat kecil (< 380px) */
 @media (max-width: 380px) {
-  .login-mobile-brand {
-    height: 30vh;
-    min-height: 160px;
-  }
-  .login-form-card {
-    padding: 1.5rem 1.25rem 2rem;
-    min-height: 70vh;
-  }
+  .login-panel--form { padding-top: 30vh; }
+  .login-mobile-brand { height: 30vh; min-height: 150px; }
   .login-mobile-title { font-size: 1.25rem; }
+  .login-form-card { padding: 1.5rem 1.25rem 2rem; }
 }
-
 </style>

@@ -40,9 +40,26 @@
           <span>Menunggu Persetujuan Anda</span>
           <span v-if="tickets.length" class="badge badge-warning">{{ tickets.length }}</span>
         </div>
-        <div class="kd-search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="kd-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input v-model="search" type="text" placeholder="Cari judul / unit..." class="kd-search-input" />
+        <!-- Filter & Search toolbar -->
+        <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+          <select v-model="filterProcedure" class="form-input" style="height:36px;font-size:0.8rem;padding:0 1.5rem 0 0.5rem;width:auto;min-width:130px;">
+            <option value="">Semua Prosedur</option>
+            <option value="perbaikan">Perbaikan</option>
+            <option value="pengadaan">Pengadaan</option>
+            <option value="mutasi">Mutasi</option>
+            <option value="pemeliharaan">Pemeliharaan</option>
+            <option value="pemutihan">Pemutihan</option>
+          </select>
+          <select v-model="filterUrgency" class="form-input" style="height:36px;font-size:0.8rem;padding:0 1.5rem 0 0.5rem;width:auto;min-width:120px;">
+            <option value="">Semua Urgensi</option>
+            <option value="rendah">🟢 Rendah</option>
+            <option value="sedang">🟡 Sedang</option>
+            <option value="tinggi_darurat">🔴 Darurat</option>
+          </select>
+          <div class="kd-search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="kd-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input v-model="search" type="text" placeholder="Cari judul / unit / ID..." class="kd-search-input" />
+          </div>
         </div>
       </div>
 
@@ -66,12 +83,42 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID Tiket</th>
-              <th>Prosedur</th>
-              <th>Unit</th>
-              <th>Judul Pengajuan</th>
-              <th style="text-align:right;">Estimasi Biaya</th>
-              <th style="text-align:center;">Urgensi</th>
+              <th class="sortable" @click="toggleSort('id')" title="Urutkan ID">
+                ID Tiket
+                <span class="sort-icon" :class="{ active: sortBy === 'id' }">
+                  {{ sortBy === 'id' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" @click="toggleSort('procedure_type')" title="Urutkan Prosedur">
+                Prosedur
+                <span class="sort-icon" :class="{ active: sortBy === 'procedure_type' }">
+                  {{ sortBy === 'procedure_type' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" @click="toggleSort('unit')" title="Urutkan Unit A-Z">
+                Unit
+                <span class="sort-icon" :class="{ active: sortBy === 'unit' }">
+                  {{ sortBy === 'unit' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" @click="toggleSort('title')" title="Urutkan Judul A-Z / Z-A">
+                Judul Pengajuan
+                <span class="sort-icon" :class="{ active: sortBy === 'title' }">
+                  {{ sortBy === 'title' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" style="text-align:right;" @click="toggleSort('estimated_cost')" title="Urutkan Estimasi Biaya">
+                Estimasi Biaya
+                <span class="sort-icon" :class="{ active: sortBy === 'estimated_cost' }">
+                  {{ sortBy === 'estimated_cost' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" style="text-align:center;" @click="toggleSort('urgency_level')" title="Urutkan Urgensi">
+                Urgensi
+                <span class="sort-icon" :class="{ active: sortBy === 'urgency_level' }">
+                  {{ sortBy === 'urgency_level' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
               <th style="text-align:center;">Aksi</th>
             </tr>
           </thead>
@@ -126,14 +173,63 @@ const router = useRouter();
 const isLoading = ref(false);
 const tickets = ref([]);
 const search = ref('');
+const filterProcedure = ref('');
+const filterUrgency = ref('');
+const sortBy = ref('id');
+const sortDir = ref('desc');
+
+const urgencyRank = (level) => {
+  const map = { tinggi_darurat: 3, sedang: 2, rendah: 1 };
+  return map[level] || 0;
+};
+
+const toggleSort = (col) => {
+  if (sortBy.value === col) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = col;
+    sortDir.value = (col === 'estimated_cost' || col === 'id') ? 'desc' : 'asc';
+  }
+};
 
 const filteredTickets = computed(() => {
-  if (!search.value.trim()) return tickets.value;
-  const q = search.value.toLowerCase();
-  return tickets.value.filter(t =>
-    t.title?.toLowerCase().includes(q) ||
-    t.unit?.name?.toLowerCase().includes(q)
-  );
+  let list = tickets.value.slice();
+
+  if (search.value.trim()) {
+    const q = search.value.trim().toLowerCase();
+    list = list.filter(t => {
+      const idStr = String(t.id || '');
+      const paddedId = '#' + idStr.padStart(4, '0');
+      return (
+        idStr.includes(q) ||
+        paddedId.toLowerCase().includes(q) ||
+        t.title?.toLowerCase().includes(q) ||
+        t.unit?.name?.toLowerCase().includes(q)
+      );
+    });
+  }
+
+  if (filterProcedure.value) {
+    list = list.filter(t => t.procedure_type === filterProcedure.value);
+  }
+
+  if (filterUrgency.value) {
+    list = list.filter(t => t.urgency_level === filterUrgency.value);
+  }
+
+  list.sort((a, b) => {
+    let cmp = 0;
+    if (sortBy.value === 'id') cmp = Number(a.id || 0) - Number(b.id || 0);
+    else if (sortBy.value === 'title') cmp = (a.title || '').localeCompare(b.title || '', 'id-ID');
+    else if (sortBy.value === 'unit') cmp = (a.unit?.name || '').localeCompare(b.unit?.name || '', 'id-ID');
+    else if (sortBy.value === 'procedure_type') cmp = (a.procedure_type || '').localeCompare(b.procedure_type || '', 'id-ID');
+    else if (sortBy.value === 'estimated_cost') cmp = Number(a.estimated_cost || 0) - Number(b.estimated_cost || 0);
+    else if (sortBy.value === 'urgency_level') cmp = urgencyRank(a.urgency_level) - urgencyRank(b.urgency_level);
+
+    return sortDir.value === 'asc' ? cmp : -cmp;
+  });
+
+  return list;
 });
 
 const urgentCount = computed(() => tickets.value.filter(t => t.urgency_level === 'tinggi_darurat').length);

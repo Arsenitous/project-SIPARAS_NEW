@@ -60,11 +60,36 @@
           <thead>
             <tr>
               <th style="width:40px;">#</th>
-              <th style="width:220px;">Nama Vendor</th>
-              <th style="width:160px;">PIC</th>
-              <th style="width:150px;">Telepon</th>
-              <th style="width:200px;">Spesialisasi</th>
-              <th style="width:120px;">Status</th>
+              <th class="sortable" style="width:230px;" @click="toggleSort('name')" title="Urutkan Nama Vendor A-Z">
+                Nama Vendor
+                <span class="sort-icon" :class="{ active: sortBy === 'name' }">
+                  {{ sortBy === 'name' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" style="width:160px;" @click="toggleSort('pic_name')" title="Urutkan PIC">
+                PIC
+                <span class="sort-icon" :class="{ active: sortBy === 'pic_name' }">
+                  {{ sortBy === 'pic_name' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" style="width:150px;" @click="toggleSort('phone')" title="Urutkan Telepon">
+                Telepon
+                <span class="sort-icon" :class="{ active: sortBy === 'phone' }">
+                  {{ sortBy === 'phone' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" style="width:200px;" @click="toggleSort('specialty')" title="Urutkan Spesialisasi">
+                Spesialisasi
+                <span class="sort-icon" :class="{ active: sortBy === 'specialty' }">
+                  {{ sortBy === 'specialty' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" style="width:120px;" @click="toggleSort('is_active')" title="Urutkan Status">
+                Status
+                <span class="sort-icon" :class="{ active: sortBy === 'is_active' }">
+                  {{ sortBy === 'is_active' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
               <th style="width:110px;">Aksi</th>
             </tr>
           </thead>
@@ -194,13 +219,39 @@ const canDelete = computed(() => ['superadmin', 'admin_sarpras'].includes(authSt
 const activeCount   = computed(() => masterStore.vendors.filter(v => v.is_active).length);
 const inactiveCount = computed(() => masterStore.vendors.filter(v => !v.is_active).length);
 
+const sortBy = ref('name');
+const sortDir = ref('asc');
+
+function toggleSort(col) {
+  if (sortBy.value === col) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = col;
+    sortDir.value = 'asc';
+  }
+}
+
 const filtered = computed(() => {
-  return masterStore.vendors.filter(v => {
+  let list = masterStore.vendors.filter(v => {
     const q = search.value.toLowerCase();
-    const matchSearch = !q || v.name?.toLowerCase().includes(q) || v.pic_name?.toLowerCase().includes(q);
+    const matchSearch = !q || v.name?.toLowerCase().includes(q) || v.pic_name?.toLowerCase().includes(q) || v.specialty?.toLowerCase().includes(q);
     const matchStatus = filterStatus.value === '' || String(Number(v.is_active)) === filterStatus.value;
     return matchSearch && matchStatus;
   });
+
+  list.sort((a, b) => {
+    let cmp = 0;
+    if (sortBy.value === 'is_active') {
+      cmp = Number(b.is_active) - Number(a.is_active);
+    } else {
+      const valA = (a[sortBy.value] || '').toString();
+      const valB = (b[sortBy.value] || '').toString();
+      cmp = valA.localeCompare(valB, 'id-ID', { numeric: true, sensitivity: 'base' });
+    }
+    return sortDir.value === 'asc' ? cmp : -cmp;
+  });
+
+  return list;
 });
 
 function reset() {

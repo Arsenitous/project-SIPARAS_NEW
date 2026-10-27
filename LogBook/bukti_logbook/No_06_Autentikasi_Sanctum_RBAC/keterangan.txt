@@ -1,0 +1,9 @@
+=== BUKTI LOGBOOK PENGERJAAN SIPARAS ===
+No Modul     : No_06
+Hari/Tanggal : 9 September 2026
+Fokus Modul  : Autentikasi Sanctum & RoleMiddleware RBAC
+Kegiatan     : Implementasi token-based auth via Laravel Sanctum dan filter otorisasi ketat melalui RoleMiddleware agar Kepala Sekolah terisolasi ke unitnya dan ASP ke wilayahnya.
+
+--- DOKUMENTASI TERLAMPIR ---
+1. bukti_code.png : Tangkapan layar kode implementasi pada berkas 'backend/app/Http/Middleware/RoleMiddleware.php'
+2. bukti_ui.png   : Tangkapan layar antarmuka pengguna / diagram arsitektur 'Matriks Routing Otomatis Berbasis Role & Isolasi Hak Akses Unit'

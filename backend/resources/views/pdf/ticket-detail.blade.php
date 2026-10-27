@@ -132,6 +132,12 @@
     <div class="info-value">{{ $ticket->problem_cause }}</div>
   </div>
   @endif
+  @if($ticket->procedure_type === 'perbaikan' || $ticket->action_plan)
+  <div class="info-row">
+    <div class="info-label">Rencana Pengerjaan</div>
+    <div class="info-value">{{ $ticket->action_plan ?: '-' }}</div>
+  </div>
+  @endif
   @if($ticket->estimated_cost > 0)
   <div class="info-row">
     <div class="info-label">Estimasi Biaya</div>

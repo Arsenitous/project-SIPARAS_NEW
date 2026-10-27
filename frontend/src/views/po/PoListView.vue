@@ -74,12 +74,42 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Nomor PO</th>
-              <th>Vendor</th>
-              <th>ID Tiket</th>
-              <th>Unit</th>
-              <th style="text-align:right;">Grand Total</th>
-              <th style="text-align:center;">Status</th>
+              <th class="sortable" @click="toggleSort('po_number')" title="Urutkan Nomor PO">
+                Nomor PO
+                <span class="sort-icon" :class="{ active: sortBy === 'po_number' }">
+                  {{ sortBy === 'po_number' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" @click="toggleSort('vendor')" title="Urutkan Vendor A-Z">
+                Vendor
+                <span class="sort-icon" :class="{ active: sortBy === 'vendor' }">
+                  {{ sortBy === 'vendor' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" @click="toggleSort('ticket_id')" title="Urutkan ID Tiket">
+                ID Tiket
+                <span class="sort-icon" :class="{ active: sortBy === 'ticket_id' }">
+                  {{ sortBy === 'ticket_id' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" @click="toggleSort('unit')" title="Urutkan Unit">
+                Unit
+                <span class="sort-icon" :class="{ active: sortBy === 'unit' }">
+                  {{ sortBy === 'unit' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" style="text-align:right;" @click="toggleSort('grand_total')" title="Urutkan Total">
+                Grand Total
+                <span class="sort-icon" :class="{ active: sortBy === 'grand_total' }">
+                  {{ sortBy === 'grand_total' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" style="text-align:center;" @click="toggleSort('status')" title="Urutkan Status">
+                Status
+                <span class="sort-icon" :class="{ active: sortBy === 'status' }">
+                  {{ sortBy === 'status' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
               <th style="text-align:center;">Aksi</th>
             </tr>
           </thead>
@@ -170,15 +200,48 @@ const tabs = computed(() => [
 
 const currentTab = computed(() => tabs.value.find(t => t.value === activeTab.value));
 
+const sortBy = ref('po_number');
+const sortDir = ref('asc');
+
+function toggleSort(col) {
+  if (sortBy.value === col) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = col;
+    sortDir.value = (col === 'grand_total' || col === 'ticket_id') ? 'desc' : 'asc';
+  }
+}
+
 const filteredPos = computed(() => {
   let list = activeTab.value === 'all' ? pos.value : pos.value.filter(p => p.status === activeTab.value);
   if (search.value.trim()) {
     const q = search.value.toLowerCase();
     list = list.filter(p =>
       p.po_number?.toLowerCase().includes(q) ||
-      p.vendor?.name?.toLowerCase().includes(q)
+      p.vendor?.name?.toLowerCase().includes(q) ||
+      p.ticket?.unit?.name?.toLowerCase().includes(q) ||
+      String(p.ticket_id || '').includes(q)
     );
   }
+
+  list.sort((a, b) => {
+    let cmp = 0;
+    if (sortBy.value === 'grand_total') {
+      cmp = Number(a.grand_total || 0) - Number(b.grand_total || 0);
+    } else if (sortBy.value === 'ticket_id') {
+      cmp = Number(a.ticket_id || 0) - Number(b.ticket_id || 0);
+    } else if (sortBy.value === 'vendor') {
+      cmp = (a.vendor?.name || '').localeCompare(b.vendor?.name || '', 'id-ID');
+    } else if (sortBy.value === 'unit') {
+      cmp = (a.ticket?.unit?.name || '').localeCompare(b.ticket?.unit?.name || '', 'id-ID');
+    } else {
+      const valA = (a[sortBy.value] || '').toString();
+      const valB = (b[sortBy.value] || '').toString();
+      cmp = valA.localeCompare(valB, 'id-ID');
+    }
+    return sortDir.value === 'asc' ? cmp : -cmp;
+  });
+
   return list;
 });
 

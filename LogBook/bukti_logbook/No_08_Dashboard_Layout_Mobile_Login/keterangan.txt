@@ -1,0 +1,9 @@
+=== BUKTI LOGBOOK PENGERJAAN SIPARAS ===
+No Modul     : No_08
+Hari/Tanggal : 11 September 2026
+Fokus Modul  : Layout Dashboard & Halaman Login Responsif Mobile
+Kegiatan     : Perancangan halaman login modern dengan proporsi viewport height (1/3 visual branding YGPKB dan 2/3 formulir input) serta tata letak dashboard adaptif (DashboardLayout).
+
+--- DOKUMENTASI TERLAMPIR ---
+1. bukti_code.png : Tangkapan layar kode implementasi pada berkas 'frontend/src/views/auth/LoginView.vue'
+2. bukti_ui.png   : Tangkapan layar antarmuka pengguna / diagram arsitektur 'Antarmuka Login Responsif Proporsi Layar Mobile & Desktop'

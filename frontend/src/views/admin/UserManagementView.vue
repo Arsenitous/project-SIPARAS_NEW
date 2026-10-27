@@ -59,16 +59,36 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Pengguna</th>
-              <th>Role</th>
-              <th>Unit</th>
-              <th>Status</th>
+              <th class="sortable" @click="toggleSort('name')" title="Urutkan Nama A-Z">
+                Pengguna
+                <span class="sort-icon" :class="{ active: sortBy === 'name' }">
+                  {{ sortBy === 'name' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" @click="toggleSort('role')" title="Urutkan Role">
+                Role
+                <span class="sort-icon" :class="{ active: sortBy === 'role' }">
+                  {{ sortBy === 'role' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" @click="toggleSort('unit')" title="Urutkan Unit A-Z">
+                Unit
+                <span class="sort-icon" :class="{ active: sortBy === 'unit' }">
+                  {{ sortBy === 'unit' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" @click="toggleSort('status')" title="Urutkan Status">
+                Status
+                <span class="sort-icon" :class="{ active: sortBy === 'status' }">
+                  {{ sortBy === 'status' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
               <th>Terakhir Login</th>
               <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="user in users" :key="user.id">
+            <tr v-for="user in sortedUsers" :key="user.id">
               <td>
                 <div style="display:flex;align-items:center;gap:0.75rem;">
                   <div class="user-avatar">{{ getInitials(user.name) }}</div>
@@ -284,6 +304,39 @@ const allRoles = {
   kd_sarpras: 'KD Sarpras', admin_sarpras: 'Admin Sarpras',
   koordinator_ski: 'Koordinator SKI', koordinator_utama: 'Koordinator Utama',
 };
+
+// ── Sorting ──────────────────────────────────────────────────
+const sortBy = ref('name');
+const sortDir = ref('asc');
+
+function toggleSort(col) {
+  if (sortBy.value === col) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = col;
+    sortDir.value = 'asc';
+  }
+}
+
+const sortedUsers = computed(() => {
+  let list = users.value.slice();
+  list.sort((a, b) => {
+    let cmp = 0;
+    if (sortBy.value === 'name') {
+      cmp = (a.name || '').localeCompare(b.name || '', 'id-ID');
+    } else if (sortBy.value === 'role') {
+      cmp = (a.role || '').localeCompare(b.role || '', 'id-ID');
+    } else if (sortBy.value === 'unit') {
+      const uA = a.unit?.name || '';
+      const uB = b.unit?.name || '';
+      cmp = uA.localeCompare(uB, 'id-ID');
+    } else if (sortBy.value === 'status') {
+      cmp = Number(b.is_active) - Number(a.is_active);
+    }
+    return sortDir.value === 'asc' ? cmp : -cmp;
+  });
+  return list;
+});
 
 // ── Lifecycle ───────────────────────────────────────────────
 onMounted(async () => {

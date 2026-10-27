@@ -105,6 +105,10 @@
                 <label class="form-label">Estimasi Biaya Perbaikan (Rp)</label>
                 <input v-model="form.estimated_cost" type="number" min="0" step="1000" class="form-input" placeholder="0" />
               </div>
+              <div class="col-span-2">
+                <label class="form-label">Rencana Pengerjaan</label>
+                <textarea v-model="form.action_plan" rows="3" class="form-input" placeholder="Jelaskan rencana teknis pengerjaan, estimasi waktu, atau pihak pelaksana (opsional)..."></textarea>
+              </div>
             </div>
           </section>
         </template>
@@ -440,7 +444,7 @@ const form = ref({
   // Mutasi: Tujuan
   target_unit_id: '', target_location_name: '',
   // Umum
-  title: '', urgency_level: 'sedang', problem_cause: '',
+  title: '', urgency_level: 'sedang', problem_cause: '', action_plan: '',
   target_object_category: 'fasilitas_ruangan',
   item_name: '', inventory_code: '',
   estimated_cost: 0,
@@ -499,6 +503,7 @@ watch(() => form.value.procedure_type, () => {
   form.value.items = [defaultItem()];
   form.value.title = '';
   form.value.problem_cause = '';
+  form.value.action_plan = '';
 });
 
 const submitTicket = async () => {
@@ -512,7 +517,7 @@ const submitTicket = async () => {
   try {
     const payload = new FormData();
     // Core fields
-    const fields = ['procedure_type', 'unit_id', 'location_name', 'specific_location', 'title', 'urgency_level', 'problem_cause', 'estimated_cost', 'target_object_category', 'item_name', 'inventory_code', 'target_unit_id', 'target_location_name', 'disposal_action', 'disposal_destination_or_notes', 'estimated_salvage_value'];
+    const fields = ['procedure_type', 'unit_id', 'location_name', 'specific_location', 'title', 'urgency_level', 'problem_cause', 'action_plan', 'estimated_cost', 'target_object_category', 'item_name', 'inventory_code', 'target_unit_id', 'target_location_name', 'disposal_action', 'disposal_destination_or_notes', 'estimated_salvage_value'];
     fields.forEach(k => { if (form.value[k] !== undefined && form.value[k] !== null) payload.append(k, form.value[k]); });
 
     // Items

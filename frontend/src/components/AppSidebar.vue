@@ -9,9 +9,27 @@
   </transition>
 
   <aside class="sidebar" :class="{ 'sidebar--collapsed': isCollapsed, 'sidebar--mobile-open': isMobileOpen }">
+    <!-- Floating Edge Toggle Button (HANYA tampil saat sidebar di-minimize) -->
+    <button
+      v-if="isCollapsed"
+      class="sidebar-collapse-btn"
+      @click="toggleCollapse"
+      title="Perluas Sidebar"
+      aria-label="Perluas Sidebar"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </button>
+
     <!-- Logo Area -->
-    <div class="sidebar-logo" :class="{ 'cursor-pointer': isCollapsed }" @click="isCollapsed && toggleCollapse()" :title="isCollapsed ? 'Perluas Sidebar' : ''">
-      <div style="display:flex;align-items:center;gap:0.75rem;min-width:0;">
+    <div
+      class="sidebar-logo"
+      :class="{ 'sidebar-logo--collapsed': isCollapsed, 'cursor-pointer': isCollapsed }"
+      @click="isCollapsed && toggleCollapse()"
+      :title="isCollapsed ? 'Klik untuk memperluas sidebar' : ''"
+    >
+      <div class="sidebar-logo-inner">
         <img src="/logo-ygpkb.png" alt="YGPKB Logo" class="sidebar-logo-img" />
         <transition name="fade-text">
           <div v-if="!isCollapsed" class="sidebar-logo-text">
@@ -136,25 +154,37 @@
     </div>
 
     <!-- User Profile Card -->
-    <div class="sidebar-profile">
-      <div class="sidebar-profile-avatar">
-        {{ userInitials }}
-      </div>
-      <transition name="fade-text">
-        <div v-if="!isCollapsed" class="sidebar-profile-info">
+    <div class="sidebar-profile" :class="{ 'sidebar-profile--collapsed': isCollapsed }">
+      <template v-if="!isCollapsed">
+        <div class="sidebar-profile-avatar">
+          {{ userInitials }}
+        </div>
+        <div class="sidebar-profile-info">
           <p class="sidebar-profile-name">{{ formatRole(authStore.user?.role) }}</p>
           <p class="sidebar-profile-role">{{ authStore.user?.username || authStore.user?.email }}</p>
           <p v-if="authStore.user?.unit" class="sidebar-profile-unit">{{ authStore.user.unit?.name }}</p>
         </div>
-      </transition>
-      <transition name="fade-text">
-        <button v-if="!isCollapsed" class="sidebar-logout-btn" @click="handleLogout" title="Keluar">
+        <button class="sidebar-logout-btn" @click="handleLogout" title="Keluar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </button>
-      </transition>
-      <button v-if="isCollapsed" class="sidebar-logout-btn" @click="handleLogout" title="Keluar (Logout)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </button>
+      </template>
+
+      <!-- Collapsed Mode: Avatar Centered, and Centered Logout Button Below -->
+      <template v-else>
+        <div
+          class="sidebar-profile-avatar"
+          :title="`${authStore.user?.name || authStore.user?.username} (${formatRole(authStore.user?.role)})`"
+        >
+          {{ userInitials }}
+        </div>
+        <button
+          class="sidebar-logout-btn sidebar-logout-btn--collapsed"
+          @click="handleLogout"
+          title="Keluar (Logout)"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </template>
     </div>
   </aside>
 </template>
@@ -336,6 +366,41 @@ const handleLogout = async () => {
   }
 }
 
+/* ── COLLAPSE / EXPAND FLOATING EDGE BUTTON ── */
+.sidebar-collapse-btn {
+  position: absolute;
+  top: 19px;
+  right: -13px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg-sidebar, #0f2347);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 120;
+}
+.sidebar-collapse-btn:hover {
+  background: var(--color-primary, #1a3a6b);
+  border-color: #ffffff;
+  transform: scale(1.18);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+.sidebar-collapse-btn svg {
+  width: 14px;
+  height: 14px;
+}
+@media (max-width: 768px) {
+  .sidebar-collapse-btn {
+    display: none;
+  }
+}
+
 /* ── LOGO ── */
 .sidebar-logo {
   display: flex;
@@ -351,6 +416,24 @@ const handleLogout = async () => {
 .sidebar-logo.cursor-pointer { cursor: pointer; }
 .sidebar-logo.cursor-pointer:hover { background: rgba(255,255,255,0.03); }
 
+.sidebar-logo-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.sidebar--collapsed .sidebar-logo {
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.sidebar--collapsed .sidebar-logo-inner {
+  justify-content: center !important;
+  width: 100% !important;
+  gap: 0 !important;
+}
+
 .sidebar-logo-img {
   width: 38px;
   height: 38px;
@@ -358,6 +441,10 @@ const handleLogout = async () => {
   flex-shrink: 0;
   filter: brightness(0) invert(1);
   border-radius: 8px;
+}
+
+.sidebar--collapsed .sidebar-logo-img {
+  margin: 0 auto;
 }
 .sidebar-logo-text { overflow: hidden; white-space: nowrap; }
 .sidebar-appname {
@@ -499,6 +586,19 @@ const handleLogout = async () => {
   border-top: 1px solid rgba(255,255,255,0.08);
   min-height: 72px;
   overflow: hidden;
+}
+
+.sidebar--collapsed .sidebar-profile {
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 0.75rem 0 !important;
+  min-height: 84px !important;
+}
+
+.sidebar-logout-btn--collapsed {
+  margin: 0 auto !important;
 }
 .sidebar-profile-avatar {
   width: 36px;

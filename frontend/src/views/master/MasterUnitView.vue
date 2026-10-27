@@ -53,10 +53,30 @@
           <thead>
             <tr>
               <th style="width:50px;">#</th>
-              <th style="width:130px;">Kode Unit</th>
-              <th>Nama Unit</th>
-              <th style="width:150px;">Kategori</th>
-              <th style="width:150px;">Wilayah ASP</th>
+              <th class="sortable" style="width:140px;" @click="toggleSort('unit_code')" title="Urutkan Kode Unit">
+                Kode Unit
+                <span class="sort-icon" :class="{ active: sortBy === 'unit_code' }">
+                  {{ sortBy === 'unit_code' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" @click="toggleSort('name')" title="Urutkan Nama Unit A-Z">
+                Nama Unit
+                <span class="sort-icon" :class="{ active: sortBy === 'name' }">
+                  {{ sortBy === 'name' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" style="width:160px;" @click="toggleSort('category')" title="Urutkan Kategori">
+                Kategori
+                <span class="sort-icon" :class="{ active: sortBy === 'category' }">
+                  {{ sortBy === 'category' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
+              <th class="sortable" style="width:160px;" @click="toggleSort('asp_territory')" title="Urutkan Wilayah ASP">
+                Wilayah ASP
+                <span class="sort-icon" :class="{ active: sortBy === 'asp_territory' }">
+                  {{ sortBy === 'asp_territory' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅' }}
+                </span>
+              </th>
               <th style="width:100px;">Aksi</th>
             </tr>
           </thead>
@@ -172,14 +192,35 @@ const form = ref({ ...FORM_DEFAULT });
 const canEdit   = computed(() => ['superadmin', 'admin_sarpras', 'kd_sarpras'].includes(authStore.user?.role));
 const canDelete = computed(() => ['superadmin', 'admin_sarpras'].includes(authStore.user?.role));
 
+const sortBy = ref('name');
+const sortDir = ref('asc');
+
+function toggleSort(col) {
+  if (sortBy.value === col) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = col;
+    sortDir.value = 'asc';
+  }
+}
+
 const filtered = computed(() => {
-  return masterStore.units.filter(u => {
+  let list = masterStore.units.filter(u => {
     const q = search.value.toLowerCase();
     const matchSearch = !q || u.name?.toLowerCase().includes(q) || u.unit_code?.toLowerCase().includes(q);
     const matchCat = !filterCategory.value || u.category === filterCategory.value;
     const matchTerr = !filterTerritory.value || u.asp_territory === filterTerritory.value;
     return matchSearch && matchCat && matchTerr;
   });
+
+  list.sort((a, b) => {
+    const valA = (a[sortBy.value] || '').toString();
+    const valB = (b[sortBy.value] || '').toString();
+    const cmp = valA.localeCompare(valB, 'id-ID', { numeric: true, sensitivity: 'base' });
+    return sortDir.value === 'asc' ? cmp : -cmp;
+  });
+
+  return list;
 });
 
 function onSearch() { /* reactive */ }

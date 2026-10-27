@@ -1,0 +1,9 @@
+=== BUKTI LOGBOOK PENGERJAAN SIPARAS ===
+No Modul     : No_17
+Hari/Tanggal : 24 September 2026
+Fokus Modul  : Modul Kalender Pemeliharaan Servis Preventif
+Kegiatan     : Pengembangan modul pemantauan jadwal servis berkala fasilitas aset (AC, genset, pompa air) di 14 unit sekolah/kampus untuk mencegah kerusakan mendadak.
+
+--- DOKUMENTASI TERLAMPIR ---
+1. bukti_code.png : Tangkapan layar kode implementasi pada berkas 'backend/app/Http/Controllers/Api/V1/PreventiveScheduleController.php'
+2. bukti_ui.png   : Tangkapan layar antarmuka pengguna / diagram arsitektur 'Kalender Pemeliharaan Rutin Fasilitas (AC, Genset, Toren Air) 14 Unit'

@@ -19,6 +19,7 @@ class StoreTicketRequest extends FormRequest
             'procedure_type'  => 'required|in:perbaikan,pemeliharaan,pengadaan,mutasi,pemutihan',
             'urgency_level'   => 'required|in:rendah,sedang,tinggi_darurat',
             'title'           => 'required|string|max:200',
+            'action_plan'     => 'nullable|string|max:2000',
             'photos.*'        => 'nullable|file|image|max:5120',
         ];
 
@@ -30,6 +31,7 @@ class StoreTicketRequest extends FormRequest
                 'location_name'          => 'nullable|string|max:150',
                 'specific_location'      => 'nullable|string|max:255',
                 'problem_cause'          => 'required|string|max:2000',
+                'action_plan'            => 'nullable|string|max:2000',
                 'target_object_category' => 'required|in:fasilitas_ruangan,barang_inventaris',
                 'item_name'              => 'nullable|string|max:150',
                 'inventory_code'         => 'nullable|string|max:80',

@@ -1,0 +1,9 @@
+=== BUKTI LOGBOOK PENGERJAAN SIPARAS ===
+No Modul     : No_19
+Hari/Tanggal : 28 September 2026
+Fokus Modul  : Pengujian Blackbox Testing 7 Peran Pengguna
+Kegiatan     : Pelaksanaan pengujian fungsional sistem menggunakan metode Blackbox Testing untuk 20 skenario uji (RBAC, isolasi data unit, upload foto, alur approval) dengan seluruh status Valid.
+
+--- DOKUMENTASI TERLAMPIR ---
+1. bukti_code.png : Tangkapan layar kode implementasi pada berkas 'backend/app/Policies/UserPolicy.php'
+2. bukti_ui.png   : Tangkapan layar antarmuka pengguna / diagram arsitektur 'Matriks Pengujian Fungsional Blackbox Testing 7 Role Pengguna'

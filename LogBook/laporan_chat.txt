@@ -1,0 +1,58 @@
+PROJECT-SIPARAS
+
+Link : https://siparas-frontend.vercel.app
+Catatan: Tautan ini hanya menampilkan sisi frontend. Berhubung sistem sudah terhubung ke backend, mohon tunggu pembukaan akses backend atau hubungi tim terkait untuk bantuan pengujian/testing.
+
+Fitur dan Hal yang Bisa Diuji/Ditest:
+1. Pembagian Hak Akses (RBAC): Login dengan 7 Role berbeda akan menampilkan menu dan tampilan yang berbeda-beda.
+2. Pembuatan Tiket: Kepala Sekolah dapat membuat tiket Pengadaan, Perbaikan, dan Mutasi (hanya bisa untuk unitnya sendiri).
+3. Alur Persetujuan (Approval Flow): Review dan approval tiket secara berjenjang dari ASP Wilayah hingga KD Sarpras.
+4. Manajemen Purchase Order (PO): Pengecekan daftar dan proses pembuatan Purchase Order.
+5. Master Data & User Management: Pengelolaan data barang, unit, vendor, dan akun pengguna oleh Admin.
+6. Laporan Eksekutif: Laporan untuk memantau ringkasan status pengajuan tiket.
+7. Fitur Pencarian & Filter: Menyaring dan mencari daftar tiket dengan lebih spesifik.
+8. Upload Bukti Foto: Lampirkan gambar saat pembuatan tiket (sistem otomatis melakukan kompresi ukuran foto).
+9. Tracker Status (Timeline): Pelacakan progres/riwayat tiket lewat tampilan timeline visual.
+10. Responsivitas UI (Mobile Friendly): Tampilan web menyesuaikan jika diakses menggunakan layar HP/Mobile.
+11. Notifikasi & Konfirmasi: Sistem akan memunculkan pop-up konfirmasi keamanan dan notifikasi sukses/gagal.
+
+Temuan/Target yang perlu dikejar:
+1. Pembuatan model SLO => Untuk Batas waktu setiap proses alur tiket sampai BAST
+2. Pengujian Blackbox Testing
+3. Export laporan PDF/excel
+
+Akses Account yang tersedia:
+--- KEPALA SEKOLAH (13 akun, masing-masing terkunci ke 1 unit) ---
+Username : kepsek_tk1       | Password: password | Unit: TK 1
+Username : kepsek_sd1       | Password: password | Unit: SD 1
+Username : kepsek_smp1      | Password: password | Unit: SMP 1
+Username : kepsek_smk1      | Password: password | Unit: SMK 1
+Username : kepsek_sma_regu  | Password: password | Unit: SMA Regu
+Username : kepsek_tk2       | Password: password | Unit: TK 2
+Username : kepsek_sd2       | Password: password | Unit: SD 2
+Username : kepsek_smp2      | Password: password | Unit: SMP 2
+Username : kepsek_smk2      | Password: password | Unit: SMK 2
+Username : kepsek_sd_ibc    | Password: password | Unit: SD IBC
+Username : kepsek_smp_ibc   | Password: password | Unit: SMP IBC
+Username : kepsek_sma_ibc   | Password: password | Unit: SMA IBC
+Username : kepsek_itbss     | Password: password | Unit: ITBSS
+
+--- ASP WILAYAH (5 wilayah) ---
+Username : asp_kota         | Password: password | Wilayah: Kota     
+Username : asp_regu         | Password: password | Wilayah: Regu     
+Username : asp_kubu_raya    | Password: password | Wilayah: Kubu Raya
+Username : asp_ibc          | Password: password | Wilayah: IBC     
+Username : asp_itbss        | Password: password | Wilayah: ITBSS   
+
+--- KD SARPRAS ---
+Username : kd_sarpras       | Password: password | Role: kd_sarpras
+
+--- ADMIN SARPRAS ---
+Username : admin             | Password: password | Role: admin_sarpras
+
+--- KOORDINATOR ---
+Username : koor_utama       | Password: password | Role: koordinator_utama
+Username : koor_ski         | Password: password | Role: koordinator_ski
+
+--- DEPT KANTOR PUSAT ---
+Username : dept_ga           | Password: password | Role: dept_ygpkb (YGPKB)

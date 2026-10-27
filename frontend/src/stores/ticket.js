@@ -68,6 +68,19 @@ export const useTicketStore = defineStore('ticket', {
       } finally {
         this.isLoading = false;
       }
+    },
+    async deleteTicket(id) {
+      this.isLoading = true;
+      try {
+        const response = await api.delete(`/tickets/${id}`);
+        if (this.currentTicket && this.currentTicket.id === Number(id)) {
+          this.currentTicket = null;
+        }
+        this.tickets = this.tickets.filter((t) => t.id !== Number(id));
+        return response;
+      } finally {
+        this.isLoading = false;
+      }
     }
   }
 });

@@ -27,7 +27,7 @@ class TicketController extends Controller
     public function index(Request $request)
     {
         $user  = $request->user();
-        $query = Ticket::with(['unit', 'user']);
+        $query = Ticket::with(['unit', 'user'])->withCount(['purchaseOrders', 'bastDocument']);
 
         // Role-based data isolation
         match ($user->role) {
@@ -47,7 +47,16 @@ class TicketController extends Controller
             $query->where('urgency_level', $request->urgency_level);
         }
         if ($request->filled('search')) {
-            $query->where('title', 'like', '%'.$request->search.'%');
+            $s = trim($request->search);
+            $cleanId = ltrim(preg_replace('/^#0*/', '', $s), '0');
+            $query->where(function ($q) use ($s, $cleanId) {
+                $q->where('title', 'like', "%{$s}%")
+                  ->orWhere('location_name', 'like', "%{$s}%")
+                  ->orWhereHas('unit', fn($uq) => $uq->where('name', 'like', "%{$s}%"));
+                if (is_numeric($cleanId) && (int)$cleanId > 0) {
+                    $q->orWhere('id', (int) $cleanId);
+                }
+            });
         }
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
@@ -59,12 +68,21 @@ class TicketController extends Controller
         // Sorting
         $sortBy  = $request->input('sort_by', 'created_at');
         $sortDir = $request->input('sort_dir', 'desc');
-        $allowed = ['created_at', 'updated_at', 'status', 'urgency_level', 'title'];
+        $allowed = ['id', 'created_at', 'updated_at', 'status', 'urgency_level', 'title', 'procedure_type'];
         if (in_array($sortBy, $allowed)) {
             $query->orderBy($sortBy, $sortDir === 'asc' ? 'asc' : 'desc');
         }
 
-        $tickets = $query->paginate($request->input('per_page', 15));
+        $perPage = $request->input('per_page', 25);
+        if ($perPage === 'all' || (int)$perPage > 500) {
+            $perPage = 500;
+        }
+        $tickets = $query->paginate((int) $perPage);
+
+        $tickets->getCollection()->transform(function ($ticket) use ($user) {
+            $ticket->can_delete = $this->canUserDeleteTicket($ticket, $user);
+            return $ticket;
+        });
 
         return response()->json([
             'success' => true,
@@ -82,7 +100,7 @@ class TicketController extends Controller
     /**
      * GET /tickets/{id} — Detail tiket
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $ticket = Ticket::with([
             'items', 'photos', 'purchaseOrders.vendor',
@@ -90,6 +108,8 @@ class TicketController extends Controller
             'targetUnit',
             'user', 'aspApprovalBy', 'kdApprovalBy',
         ])->findOrFail($id);
+
+        $ticket->can_delete = $this->canUserDeleteTicket($ticket, $request->user());
 
         return response()->json([
             'success' => true,
@@ -160,6 +180,7 @@ class TicketController extends Controller
                 'title'                          => $request->title,
                 'urgency_level'                  => $request->urgency_level,
                 'problem_cause'                  => $request->input('problem_cause'),
+                'action_plan'                    => $request->input('action_plan'),
                 'estimated_cost'                 => $estimatedCost,
             ]);
 
@@ -245,6 +266,7 @@ class TicketController extends Controller
         $request->validate([
             'title'         => 'sometimes|string|max:200',
             'problem_cause' => 'sometimes|string',
+            'action_plan'   => 'sometimes|nullable|string',
         ]);
 
         $ticket = Ticket::findOrFail($id);
@@ -253,10 +275,11 @@ class TicketController extends Controller
             return response()->json(['success' => false, 'message' => 'Tiket tidak dalam status revisi.'], 422);
         }
 
-        $old = $ticket->only(['title', 'problem_cause', 'status']);
+        $old = $ticket->only(['title', 'problem_cause', 'action_plan', 'status']);
         $ticket->update([
             'title'               => $request->input('title', $ticket->title),
             'problem_cause'       => $request->input('problem_cause', $ticket->problem_cause),
+            'action_plan'         => $request->input('action_plan', $ticket->action_plan),
             'status'              => 'submitted_to_asp',
             'asp_approval_status' => 'pending',
         ]);
@@ -350,5 +373,192 @@ class TicketController extends Controller
         $this->audit->logKdApproval($ticket->id, $decision, $oldStatus, $newStatus, $user, $request);
 
         return response()->json(['success' => true, 'message' => 'Approval KD berhasil.', 'data' => $ticket]);
+    }
+
+    /**
+     * DELETE /tickets/{id} — Hapus tiket sesuai alur/prosedur SIPARAS
+     */
+    public function destroy(Request $request, $id)
+    {
+        $ticket = Ticket::with(['purchaseOrders', 'bastDocument'])->findOrFail($id);
+        $user   = $request->user();
+
+        // 1. Cek ketergantungan dokumen hilir (PO & BAST)
+        if ($ticket->purchaseOrders && $ticket->purchaseOrders->count() > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tiket tidak dapat dihapus karena sudah memiliki dokumen Purchase Order (PO) terkait.',
+            ], 422);
+        }
+
+        if ($ticket->bastDocument) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tiket tidak dapat dihapus karena sudah memiliki Berita Acara Serah Terima (BAST).',
+            ], 422);
+        }
+
+        if (in_array($ticket->status, ['completed', 'signed_archived'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tiket tidak dapat dihapus karena sudah berstatus selesai atau diarsipkan.',
+            ], 422);
+        }
+
+        // 2. Evaluasi izin hapus berdasarkan role dan alur approval
+        $canDelete = false;
+        $errorMessage = 'Anda tidak memiliki wewenang untuk menghapus tiket ini.';
+
+        if (in_array($user->role, ['superadmin', 'admin_sarpras'])) {
+            $canDelete = true;
+        } elseif ($user->role === 'kepsek') {
+            $isOwner = ((int)$ticket->unit_id === (int)$user->unit_id) || ((int)$ticket->user_id === (int)$user->id);
+            if (!$isOwner) {
+                $errorMessage = 'Anda hanya dapat menghapus tiket yang berasal dari unit sekolah Anda.';
+            } elseif ($ticket->status !== 'submitted_to_asp' || $ticket->asp_approval_status !== 'pending') {
+                $errorMessage = 'Tiket tidak dapat dihapus oleh Kepsek karena sudah diteruskan ke KD Sarpras atau sudah selesai direviu ASP.';
+            } else {
+                $canDelete = true;
+            }
+        } elseif ($user->role === 'dept_ygpkb') {
+            $isOwner = ((int)$ticket->unit_id === (int)$user->unit_id) || ((int)$ticket->user_id === (int)$user->id);
+            if (!$isOwner) {
+                $errorMessage = 'Anda hanya dapat menghapus tiket dari departemen Anda.';
+            } elseif ($ticket->kd_approval_status === 'pending' && in_array($ticket->status, ['submitted_to_kd', 'submitted_to_asp'])) {
+                $canDelete = true;
+            } else {
+                $errorMessage = 'Tiket tidak dapat dihapus karena KD Sarpras sudah mereviu tiket ini.';
+            }
+        } elseif ($user->role === 'asp_wilayah') {
+            $isCreator = ((int)$ticket->user_id === (int)$user->id) || ($ticket->routing_path === 'jalur_3_temuan_asp');
+            if (!$isCreator) {
+                $errorMessage = 'ASP Wilayah hanya dapat menghapus tiket temuan lapangan yang diajukan sendiri.';
+            } elseif ($ticket->kd_approval_status === 'pending' && $ticket->status === 'submitted_to_kd') {
+                $canDelete = true;
+            } else {
+                $errorMessage = 'Tiket tidak dapat dihapus karena KD Sarpras sudah mereviu tiket ini.';
+            }
+        } elseif ($user->role === 'kd_sarpras') {
+            $canDelete = true;
+        }
+
+        if (!$canDelete) {
+            return response()->json([
+                'success' => false,
+                'message' => $errorMessage,
+            ], 403);
+        }
+
+        // 3. Eksekusi penghapusan tiket
+        DB::beginTransaction();
+        try {
+            // Catat log audit sebelum tiket dihapus
+            $this->audit->log([
+                'module'      => $ticket->procedure_type,
+                'record_id'   => $ticket->id,
+                'user_id'     => $user->id,
+                'role'        => $user->role,
+                'action'      => 'DELETE',
+                'description' => "{$user->name} ({$user->role}) menghapus tiket #{$ticket->id}: {$ticket->title}.",
+                'old_values'  => [
+                    'id'                  => $ticket->id,
+                    'title'               => $ticket->title,
+                    'procedure_type'      => $ticket->procedure_type,
+                    'routing_path'        => $ticket->routing_path,
+                    'status'              => $ticket->status,
+                    'asp_approval_status' => $ticket->asp_approval_status,
+                    'kd_approval_status'  => $ticket->kd_approval_status,
+                ],
+            ], $request);
+
+            // Hapus file fisik dari storage
+            Storage::disk('public')->deleteDirectory('ticket-photos/' . $ticket->id);
+
+            // Hapus items dan photos
+            $ticket->photos()->delete();
+            $ticket->items()->delete();
+
+            // Hapus tiket
+            $ticket->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tiket #' . str_pad($id, 4, '0', STR_PAD_LEFT) . ' berhasil dihapus.',
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus tiket: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Helper evaluasi apakah user saat ini dapat menghapus tiket sesuai alur/prosedur
+     */
+    public function canUserDeleteTicket(Ticket $ticket, $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        // Cek jika ada PO
+        $hasPo = isset($ticket->purchase_orders_count)
+            ? (int)$ticket->purchase_orders_count > 0
+            : ($ticket->purchaseOrders && $ticket->purchaseOrders->count() > 0);
+        if ($hasPo) {
+            return false;
+        }
+
+        // Cek jika ada BAST
+        $hasBast = isset($ticket->bast_document_count)
+            ? (int)$ticket->bast_document_count > 0
+            : (bool)$ticket->bastDocument;
+        if ($hasBast) {
+            return false;
+        }
+
+        // Cek status akhir
+        if (in_array($ticket->status, ['completed', 'signed_archived'])) {
+            return false;
+        }
+
+        $role = $user->role;
+
+        if (in_array($role, ['superadmin', 'admin_sarpras'])) {
+            return true;
+        }
+
+        if ($role === 'kepsek') {
+            $isOwner = ((int)$ticket->unit_id === (int)$user->unit_id) || ((int)$ticket->user_id === (int)$user->id);
+            if (!$isOwner) return false;
+
+            // Kepsek hanya boleh hapus selama tiket masih di tahap awal belum direviu ASP
+            // Begitu sudah sampai ke KD Sarpras atau sudah selesai direviu ASP, Kepsek tidak boleh hapus
+            return $ticket->status === 'submitted_to_asp' && $ticket->asp_approval_status === 'pending';
+        }
+
+        if ($role === 'dept_ygpkb') {
+            $isOwner = ((int)$ticket->unit_id === (int)$user->unit_id) || ((int)$ticket->user_id === (int)$user->id);
+            if (!$isOwner) return false;
+
+            return $ticket->kd_approval_status === 'pending' && in_array($ticket->status, ['submitted_to_kd', 'submitted_to_asp']);
+        }
+
+        if ($role === 'asp_wilayah') {
+            $isCreator = ((int)$ticket->user_id === (int)$user->id) || ($ticket->routing_path === 'jalur_3_temuan_asp');
+            if (!$isCreator) return false;
+
+            return $ticket->kd_approval_status === 'pending' && $ticket->status === 'submitted_to_kd';
+        }
+
+        if ($role === 'kd_sarpras') {
+            return true;
+        }
+
+        return false;
     }
 }

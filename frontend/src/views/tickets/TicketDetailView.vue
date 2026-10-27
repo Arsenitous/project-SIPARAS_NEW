@@ -1,16 +1,30 @@
 <template>
   <div>
-    <!-- Back button + PDF button -->
+    <!-- Back button + Actions (Hapus Tiket & Unduh PDF) -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.75rem;">
       <button class="btn btn-ghost btn-sm" @click="$router.back()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><polyline points="15 18 9 12 15 6"/></svg>
         Kembali
       </button>
-      <button v-if="ticket" class="btn btn-outline btn-sm" @click="downloadPdf" :disabled="isPdfLoading">
-        <svg v-if="!isPdfLoading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span v-if="isPdfLoading" class="spinner-sm"></span>
-        {{ isPdfLoading ? 'Menyiapkan PDF...' : 'Unduh PDF' }}
-      </button>
+      <div v-if="ticket" style="display:flex;align-items:center;gap:0.625rem;flex-wrap:wrap;">
+        <button
+          v-if="canDeleteCurrentTicket"
+          class="btn btn-outline btn-sm btn-delete-ticket"
+          @click="handleDeleteTicket"
+          :disabled="isDeleting"
+          title="Hapus Tiket Ini"
+        >
+          <svg v-if="!isDeleting" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          <span v-if="isDeleting" class="spinner-sm"></span>
+          {{ isDeleting ? 'Menghapus...' : 'Hapus Tiket' }}
+        </button>
+
+        <button class="btn btn-outline btn-sm" @click="downloadPdf" :disabled="isPdfLoading">
+          <svg v-if="!isPdfLoading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span v-if="isPdfLoading" class="spinner-sm"></span>
+          {{ isPdfLoading ? 'Menyiapkan PDF...' : 'Unduh PDF' }}
+        </button>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -82,6 +96,10 @@
               <div class="detail-row" v-if="ticket.problem_cause">
                 <dt>Deskripsi / Justifikasi</dt>
                 <dd style="white-space:pre-wrap;">{{ ticket.problem_cause }}</dd>
+              </div>
+              <div class="detail-row" v-if="ticket.procedure_type === 'perbaikan' || ticket.action_plan">
+                <dt>Rencana Pengerjaan</dt>
+                <dd style="white-space:pre-wrap;">{{ ticket.action_plan || '—' }}</dd>
               </div>
               <div class="detail-row" v-if="ticket.estimated_cost > 0">
                 <dt>Estimasi Biaya</dt>
@@ -267,17 +285,56 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useTicketStore } from '@/stores/ticket';
+import { useAuthStore } from '@/stores/auth';
+import { useToast } from '@/composables/useToast';
+import { useConfirm } from '@/composables/useConfirm';
+import { canDeleteTicket } from '@/utils/ticketWorkflow';
 import api from '@/services/api';
 
+const router = useRouter();
 const route = useRoute();
 const ticketStore = useTicketStore();
+const authStore = useAuthStore();
+const toast = useToast();
+const { confirm } = useConfirm();
 
 const ticket = ref(null);
 const timeline = ref([]);
 const isLoading = ref(true);
 const isPdfLoading = ref(false);
+const isDeleting = ref(false);
+
+const canDeleteCurrentTicket = computed(() => {
+  return canDeleteTicket(ticket.value, authStore.user);
+});
+
+async function handleDeleteTicket() {
+  if (!ticket.value || !canDeleteCurrentTicket.value) return;
+
+  const confirmed = await confirm({
+    title: 'Hapus Tiket #' + String(ticket.value.id).padStart(4, '0'),
+    message: `Apakah Anda yakin ingin menghapus tiket "${ticket.value.title}"? Seluruh berkas lampiran dan riwayat audit tiket ini akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`,
+    confirmLabel: 'Ya, Hapus Tiket',
+    cancelLabel: 'Batal',
+    type: 'danger',
+  });
+
+  if (!confirmed) return;
+
+  isDeleting.value = true;
+  try {
+    const res = await ticketStore.deleteTicket(ticket.value.id);
+    toast.success(res?.message || 'Tiket berhasil dihapus.');
+    router.push('/dashboard');
+  } catch (err) {
+    const msg = err?.message || err?.response?.data?.message || 'Gagal menghapus tiket.';
+    toast.error(msg);
+  } finally {
+    isDeleting.value = false;
+  }
+}
 
 onMounted(async () => {
   const id = route.params.id;

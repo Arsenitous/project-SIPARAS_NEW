@@ -57,12 +57,6 @@ Route::prefix('v1')->group(function () {
                 ->middleware('role:superadmin,admin_sarpras,kd_sarpras');
             Route::delete('vendors/{id}', [MasterDataController::class, 'deleteVendor'])
                 ->middleware('role:superadmin,admin_sarpras');
-
-            // Signatories
-            Route::get('signatories', [MasterDataController::class, 'getSignatories'])
-                ->middleware('role:admin_sarpras,kd_sarpras');
-            Route::put('signatories/{id}', [MasterDataController::class, 'updateSignatory'])
-                ->middleware('role:admin_sarpras');
         });
 
         // 3. Modul Transaksi Tiket 5 Prosedur
@@ -87,6 +81,9 @@ Route::prefix('v1')->group(function () {
             
             Route::post('/{id}/approval-kd', [TicketController::class, 'approvalKd'])
                 ->middleware('role:kd_sarpras');
+
+            Route::delete('/{id}', [TicketController::class, 'destroy'])
+                ->middleware('role:superadmin,admin_sarpras,kepsek,dept_ygpkb,asp_wilayah,kd_sarpras');
         });
 
         // 5. Modul Mesin Purchase Order / PO Engine

@@ -68,21 +68,10 @@ return new class extends Migration
             INDEX `idx_vendors_is_active` (`is_active`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-            -- 5. TABEL: document_signatories
+            -- 5. document_signatories (Dihapus / Tidak Digunakan)
             DROP TABLE IF EXISTS `document_signatories`;
-            CREATE TABLE `document_signatories` (
-            `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            `document_type` ENUM('purchase_order', 'bast_perbaikan', 'bast_pemeliharaan', 'bast_pengadaan', 'bast_mutasi', 'bast_pemutihan') NOT NULL,
-            `column_position` ENUM('left', 'center', 'right') NOT NULL COMMENT 'Posisi kolom: kiri, tengah, kanan',
-            `signature_label` VARCHAR(100) NOT NULL COMMENT 'Teks label: Disetujui, Diorder, Diketahui, Diserahkan',
-            `default_signer_name` VARCHAR(120) NULL,
-            `default_signer_role` VARCHAR(100) NULL,
-            `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-            `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-            `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-            -- 6. TABEL: tickets
+            -- 5. TABEL: tickets
             DROP TABLE IF EXISTS `tickets`;
             CREATE TABLE `tickets` (
             `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

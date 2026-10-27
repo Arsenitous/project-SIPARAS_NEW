@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Unit;
 use App\Models\User;
 use App\Models\Vendor;
-use App\Models\DocumentSignatory;
 
 class DatabaseSeeder extends Seeder
 {
@@ -162,25 +161,6 @@ class DatabaseSeeder extends Seeder
             'name' => 'CV. Teknindo Pratama', 'pic_name' => 'Andi Wijaya',
             'phone' => '082211334455', 'address' => 'Jl. Veteran No. 12, Pontianak',
             'specialty' => 'Instalasi Listrik & AC', 'is_active' => true
-        ]);
-
-        // ═══════════════════════════════════════════════════════════
-        // 4. SEED DOCUMENT SIGNATORIES
-        // ═══════════════════════════════════════════════════════════
-        DocumentSignatory::create([
-            'document_type' => 'bast_perbaikan', 'column_position' => 'left',
-            'signature_label' => 'Pelaksana Pekerjaan', 'default_signer_name' => 'Budi Santoso',
-            'default_signer_role' => 'Pihak Ketiga / Vendor', 'is_active' => true
-        ]);
-        DocumentSignatory::create([
-            'document_type' => 'bast_perbaikan', 'column_position' => 'center',
-            'signature_label' => 'Mengetahui', 'default_signer_name' => 'Benny',
-            'default_signer_role' => 'KD Sarpras YGPKB', 'is_active' => true
-        ]);
-        DocumentSignatory::create([
-            'document_type' => 'bast_perbaikan', 'column_position' => 'right',
-            'signature_label' => 'Menyetujui', 'default_signer_name' => 'Christiana Kwee',
-            'default_signer_role' => 'Koordinator Utama YGPKB', 'is_active' => true
         ]);
 
         $this->command->info('🎉 SIPARAS seeded! 14 units, all roles, kepsek terkunci ke unitnya masing-masing.');

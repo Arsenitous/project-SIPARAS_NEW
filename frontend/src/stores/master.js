@@ -5,7 +5,6 @@ export const useMasterStore = defineStore('master', {
   state: () => ({
     units: [],
     vendors: [],
-    signatories: [],
     isLoading: false,
     isSubmitting: false,
   }),
@@ -93,17 +92,6 @@ export const useMasterStore = defineStore('master', {
     async deleteVendor(id) {
       await api.delete(`/master/vendors/${id}`);
       this.vendors = this.vendors.filter(v => v.id !== id);
-    },
-
-    // ── Signatories ────────────────────────────────────
-    async fetchSignatories() {
-      this.isLoading = true;
-      try {
-        const response = await api.get('/master/signatories');
-        this.signatories = response.data;
-      } finally {
-        this.isLoading = false;
-      }
     },
   },
 });

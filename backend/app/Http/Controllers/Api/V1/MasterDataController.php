@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\Unit;
 use App\Models\Room;
 use App\Models\Vendor;
-use App\Models\DocumentSignatory;
 
 class MasterDataController extends Controller
 {
@@ -149,19 +148,5 @@ class MasterDataController extends Controller
     public function getVendorHistory($id)
     {
         return response()->json(['success' => true, 'data' => []]);
-    }
-
-    // ────────────────────────────── SIGNATORIES ──────────────────────────────
-
-    public function getSignatories()
-    {
-        return response()->json(['success' => true, 'data' => DocumentSignatory::active()->get()]);
-    }
-
-    public function updateSignatory(Request $request, $id)
-    {
-        $sig = DocumentSignatory::findOrFail($id);
-        $sig->update($request->only(['default_signer_name', 'default_signer_role']));
-        return response()->json(['success' => true, 'message' => 'Signatory berhasil diperbarui', 'data' => $sig]);
     }
 }
